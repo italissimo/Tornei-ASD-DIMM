@@ -10,6 +10,7 @@ const CalendarioPage: React.FC = () => {
   const [partite, setPartite] = useState<Partita[]>([]);
   const [squadre, setSquadre] = useState<string[]>([]);
   const [selectedSquadra, setSelectedSquadra] = useState<string>('');
+  const [competitionFilter, setCompetitionFilter] = useState<'tutti' | 'campionato' | 'coppa'>('tutti');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,7 +20,7 @@ const CalendarioPage: React.FC = () => {
 
   useEffect(() => {
     fetchPartite();
-  }, [activeTab, selectedSquadra]);
+  }, [activeTab, selectedSquadra, competitionFilter]);
 
   const fetchSquadre = async () => {
     if (!supabase) return;
@@ -59,6 +60,12 @@ const CalendarioPage: React.FC = () => {
       query = query.or(`squadra_casa.eq.${selectedSquadra},squadra_trasferta.eq.${selectedSquadra}`);
     }
 
+    if (competitionFilter === 'campionato') {
+      query = query.eq('tipo_competizione', 'campionato');
+    } else if (competitionFilter === 'coppa') {
+      query = query.eq('tipo_competizione', 'coppa');
+    }
+
     query = query
       .order('data', { ascending: true, nullsFirst: false })
       .order('ora', { ascending: true, nullsFirst: false });
@@ -94,6 +101,37 @@ const CalendarioPage: React.FC = () => {
   const formatCampo = (campo: string | null): string => {
     if (!campo || campo === 'N/A') return 'Da definire';
     return campo;
+  };
+
+  const getCompetitionBadge = (partita: Partita) => {
+    if (!partita.tipo_competizione || partita.tipo_competizione === 'campionato') {
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          Campionato
+        </span>
+      );
+    }
+
+    if (partita.tipo_competizione === 'coppa') {
+      let label = 'Coppa';
+      if (partita.fase_coppa === 'gironi' && partita.girone) {
+        label = `Coppa - Girone ${partita.girone}`;
+      } else if (partita.fase_coppa === 'quarti') {
+        label = 'Coppa - Quarti';
+      } else if (partita.fase_coppa === 'semifinali') {
+        label = 'Coppa - Semifinali';
+      } else if (partita.fase_coppa === 'finale') {
+        label = 'Coppa - Finale';
+      }
+
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          {label}
+        </span>
+      );
+    }
+
+    return null;
   };
 
   const formatGara = (casa: string | null, trasferta: string | null): string => {
@@ -171,20 +209,35 @@ const CalendarioPage: React.FC = () => {
 
         <div className="p-6 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="relative w-full sm:w-64">
-              <select
-                value={selectedSquadra}
-                onChange={(e) => setSelectedSquadra(e.target.value)}
-                className="w-full appearance-none bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              >
-                <option value="">Tutte le squadre</option>
-                {squadre.map((squadra) => (
-                  <option key={squadra} value={squadra}>
-                    {squadra}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <div className="relative w-full sm:w-48">
+                <select
+                  value={competitionFilter}
+                  onChange={(e) => setCompetitionFilter(e.target.value as 'tutti' | 'campionato' | 'coppa')}
+                  className="w-full appearance-none bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                >
+                  <option value="tutti">Tutte le competizioni</option>
+                  <option value="campionato">Solo Campionato</option>
+                  <option value="coppa">Solo Coppa</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+
+              <div className="relative w-full sm:w-48">
+                <select
+                  value={selectedSquadra}
+                  onChange={(e) => setSelectedSquadra(e.target.value)}
+                  className="w-full appearance-none bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                >
+                  <option value="">Tutte le squadre</option>
+                  {squadre.map((squadra) => (
+                    <option key={squadra} value={squadra}>
+                      {squadra}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
             </div>
 
             <div className="text-sm text-slate-600">
@@ -234,6 +287,9 @@ const CalendarioPage: React.FC = () => {
                         Gara
                       </th>
                       <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        Competizione
+                      </th>
+                      <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                         Risultato
                       </th>
                     </tr>
@@ -275,6 +331,9 @@ const CalendarioPage: React.FC = () => {
                             <div className="text-sm font-medium text-slate-800">
                               {formatGara(partita.squadra_casa, partita.squadra_trasferta)}
                             </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            {getCompetitionBadge(partita)}
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
@@ -324,13 +383,14 @@ const CalendarioPage: React.FC = () => {
                         )}
                       </div>
 
-                      {isProssima && (
-                        <div className="mb-3">
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        {getCompetitionBadge(partita)}
+                        {isProssima && (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
                             Prossima partita
                           </span>
-                        </div>
-                      )}
+                        )}
+                      </div>
 
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center gap-3 text-sm text-slate-700">

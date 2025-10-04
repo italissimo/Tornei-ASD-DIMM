@@ -61,6 +61,17 @@ export interface StandingsRow {
   ammonizioni: number | null;
   espulsioni: number | null;
   serie: 'A' | 'B';
+  girone: string | null;
+  posizione_coppa: number | null;
+  punti_coppa: number | null;
+  giocate_coppa: number | null;
+  vittorie_coppa: number | null;
+  pareggi_coppa: number | null;
+  sconfitte_coppa: number | null;
+  reti_fatte_coppa: number | null;
+  reti_subite_coppa: number | null;
+  ammonizioni_coppa: number | null;
+  espulsioni_coppa: number | null;
   last_update: string;
 }
 
@@ -68,11 +79,20 @@ export interface CapocannonierRow {
   posizione: number;
   giocatore: string;
   squadra: string;
+  serie?: 'A' | 'B';
   gol: number | null;
   assist: number | null;
   ammonizioni: number | null;
   espulsioni: number | null;
   last_update: string;
+}
+
+export interface VincitoreCoppa {
+  id: number;
+  categoria: 'calcio5' | 'calcio7';
+  squadra: string;
+  anno: number;
+  data_vittoria: string;
 }
 
 // Helper function to format null values

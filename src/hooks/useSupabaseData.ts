@@ -35,6 +35,17 @@ export const useStandings = (category: 'calcio5' | 'calcio7') => {
             ammonizioni,
             espulsioni,
             serie,
+            girone,
+            posizione_coppa,
+            punti_coppa,
+            giocate_coppa,
+            vittorie_coppa,
+            pareggi_coppa,
+            sconfitte_coppa,
+            reti_fatte_coppa,
+            reti_subite_coppa,
+            ammonizioni_coppa,
+            espulsioni_coppa,
             last_update
           `)
           .order('posizione', { ascending: true });
@@ -107,19 +118,14 @@ export const useCapocannonieri = (category: 'calcio5' | 'calcio7') => {
         setError(null);
         const tableName = `capocannonieri_${category}`;
         console.log(`[useCapocannonieri] Attempting to fetch data from table: ${tableName}`);
-        
+
+        const selectFields = category === 'calcio5'
+          ? `posizione, giocatore, squadra, serie, gol, assist, ammonizioni, espulsioni, last_update`
+          : `posizione, giocatore, squadra, gol, assist, ammonizioni, espulsioni, last_update`;
+
         const { data: scorers, error } = await supabase
           .from(tableName)
-          .select(`
-            posizione,
-            giocatore,
-            squadra,
-            gol,
-            assist,
-            ammonizioni,
-            espulsioni,
-            last_update
-          `)
+          .select(selectFields)
           .order('posizione', { ascending: true });
 
         if (error) {

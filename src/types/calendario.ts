@@ -7,6 +7,9 @@ export interface Partita {
   squadra_casa: string | null;
   squadra_trasferta: string | null;
   risultato: string | null;
+  tipo_competizione: 'campionato' | 'coppa' | null;
+  fase_coppa: 'gironi' | 'quarti' | 'semifinali' | 'finale' | null;
+  girone: string | null;
 }
 
 export interface Squadra {

@@ -2,6 +2,8 @@ import React from 'react';
 import { Trophy, Target, Users, Loader, AlertCircle } from 'lucide-react';
 import { useStandings, useCapocannonieri } from '../hooks/useSupabaseData';
 import { formatValue, formatText, formatDate, supabase } from '../lib/supabase';
+import StandingsSerieTable from '../components/StandingsSerieTable';
+import ScorersSerieTable from '../components/ScorersSerieTable';
 
 interface StandingsPageProps {
   isAdmin: boolean;
@@ -10,11 +12,11 @@ interface StandingsPageProps {
 const StandingsPage: React.FC<StandingsPageProps> = ({ isAdmin }) => {
   const [activeTab, setActiveTab] = React.useState<'calcio5' | 'calcio7'>('calcio5');
   const [activeView, setActiveView] = React.useState<'teams' | 'scorers'>('teams');
+  const [activeSerie, setActiveSerie] = React.useState<'A' | 'B'>('A');
 
   const { data: standings, loading: standingsLoading, error: standingsError } = useStandings(activeTab);
   const { data: scorers, loading: scorersLoading, error: scorersError } = useCapocannonieri(activeTab);
 
-  // Check if Supabase is configured
   if (!supabase) {
     return (
       <div className="space-y-8">
@@ -22,7 +24,7 @@ const StandingsPage: React.FC<StandingsPageProps> = ({ isAdmin }) => {
           <Trophy className="text-teal-600" size={32} />
           <h1 className="text-4xl font-bold text-slate-800">Classifiche</h1>
         </div>
-        
+
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
           <div className="flex items-center space-x-3">
             <AlertCircle className="text-yellow-600" size={24} />
@@ -31,8 +33,8 @@ const StandingsPage: React.FC<StandingsPageProps> = ({ isAdmin }) => {
                 Configurazione Supabase Richiesta
               </h3>
               <p className="text-yellow-700 mt-2">
-                Per visualizzare le classifiche dal database, è necessario configurare Supabase. 
-                Clicca sul pulsante "Supabase" nelle impostazioni (icona in alto a destra del preview) 
+                Per visualizzare le classifiche dal database, è necessario configurare Supabase.
+                Clicca sul pulsante "Supabase" nelle impostazioni (icona in alto a destra del preview)
                 per connettere il database.
               </p>
             </div>
@@ -81,7 +83,7 @@ const StandingsPage: React.FC<StandingsPageProps> = ({ isAdmin }) => {
             {type === 'teams' ? 'Nessuna squadra trovata' : 'Nessun capocannoniere trovato'}
           </h3>
           <p className="text-blue-700 mt-2">
-            {type === 'teams' 
+            {type === 'teams'
               ? 'La tabella delle classifiche è vuota. Aggiungi dati alla tabella Supabase.'
               : 'La tabella dei capocannonieri è vuota. Aggiungi dati alla tabella Supabase.'
             }
@@ -103,16 +105,16 @@ const StandingsPage: React.FC<StandingsPageProps> = ({ isAdmin }) => {
 
   const getPositionBadge = (position: number, serie: 'A' | 'B') => {
     const baseClasses = "inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold";
-    
+
     if (serie === 'A') {
       if (position === 1) return `${baseClasses} bg-yellow-400 text-yellow-900`;
       if (position === 2) return `${baseClasses} bg-slate-300 text-slate-700`;
       if (position === 3) return `${baseClasses} bg-orange-400 text-orange-900`;
       return `${baseClasses} bg-blue-100 text-blue-800`;
     } else {
-      if (position === 9) return `${baseClasses} bg-yellow-300 text-yellow-800`; // 1st in Serie B
-      if (position === 10) return `${baseClasses} bg-slate-200 text-slate-600`; // 2nd in Serie B
-      if (position === 11) return `${baseClasses} bg-orange-300 text-orange-800`; // 3rd in Serie B
+      if (position === 9) return `${baseClasses} bg-yellow-300 text-yellow-800`;
+      if (position === 10) return `${baseClasses} bg-slate-200 text-slate-600`;
+      if (position === 11) return `${baseClasses} bg-orange-300 text-orange-800`;
       return `${baseClasses} bg-red-100 text-red-700`;
     }
   };
@@ -182,7 +184,7 @@ const StandingsPage: React.FC<StandingsPageProps> = ({ isAdmin }) => {
             </table>
           </div>
         </div>
-        
+
         {lastUpdate && (
           <div className="text-center text-sm text-slate-500">
             Ultimo aggiornamento: {formatDate(lastUpdate)}
@@ -250,7 +252,7 @@ const StandingsPage: React.FC<StandingsPageProps> = ({ isAdmin }) => {
             </table>
           </div>
         </div>
-        
+
         {lastUpdate && (
           <div className="text-center text-sm text-slate-500">
             Ultimo aggiornamento: {formatDate(lastUpdate)}
@@ -260,6 +262,8 @@ const StandingsPage: React.FC<StandingsPageProps> = ({ isAdmin }) => {
     );
   };
 
+  const showSerieToggle = activeTab === 'calcio5';
+
   return (
     <div className="space-y-8">
       <div className="flex items-center space-x-3">
@@ -267,7 +271,6 @@ const StandingsPage: React.FC<StandingsPageProps> = ({ isAdmin }) => {
         <h1 className="text-4xl font-bold text-slate-800">Classifiche</h1>
       </div>
 
-      {/* Category Tabs */}
       <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
         <button
           onClick={() => setActiveTab('calcio5')}
@@ -291,7 +294,6 @@ const StandingsPage: React.FC<StandingsPageProps> = ({ isAdmin }) => {
         </button>
       </div>
 
-      {/* View Tabs */}
       <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
         <button
           onClick={() => setActiveView('teams')}
@@ -317,10 +319,55 @@ const StandingsPage: React.FC<StandingsPageProps> = ({ isAdmin }) => {
         </button>
       </div>
 
-      {/* Content */}
-      {activeView === 'teams' ? <TeamTable /> : <ScorersTable />}
+      {showSerieToggle && (
+        <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
+          <button
+            onClick={() => setActiveSerie('A')}
+            className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeSerie === 'A'
+                ? 'bg-white text-slate-900 shadow'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Serie A
+          </button>
+          <button
+            onClick={() => setActiveSerie('B')}
+            className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeSerie === 'B'
+                ? 'bg-white text-slate-900 shadow'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Serie B
+          </button>
+        </div>
+      )}
 
-      {/* Legend */}
+      {activeView === 'teams' ? (
+        showSerieToggle ? (
+          <StandingsSerieTable
+            data={standings}
+            loading={standingsLoading}
+            error={standingsError}
+            serie={activeSerie}
+          />
+        ) : (
+          <TeamTable />
+        )
+      ) : (
+        showSerieToggle ? (
+          <ScorersSerieTable
+            data={scorers}
+            loading={scorersLoading}
+            error={scorersError}
+            serie={activeSerie}
+          />
+        ) : (
+          <ScorersTable />
+        )
+      )}
+
       <div className="bg-white p-4 rounded-xl shadow-lg">
         <h3 className="text-sm font-medium text-slate-800 mb-3">Legenda</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

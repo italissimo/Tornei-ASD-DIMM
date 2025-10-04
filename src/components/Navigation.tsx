@@ -9,7 +9,8 @@ import {
   Menu,
   X,
   Settings,
-  CalendarDays
+  CalendarDays,
+  Award
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -34,6 +35,7 @@ const Navigation: React.FC<NavigationProps> = ({
     { id: 'download', label: 'Scarica App', icon: Download },
     { id: 'rules', label: 'Regolamento', icon: BookOpen },
     { id: 'standings', label: 'Classifiche', icon: Trophy },
+    { id: 'coppa', label: 'Coppa Italia', icon: Award },
     { id: 'calendario', label: 'Calendario', icon: CalendarDays },
     { id: 'highlights', label: 'Highlights', icon: Camera },
     ...(isAdmin ? [{ id: 'admin', label: 'Admin', icon: Settings }] : [])
