@@ -14,7 +14,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   const [availableTeams, setAvailableTeams] = useState<string[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<string>('');
 
-  const [teamStanding, setTeamStanding] = useState<any>(null);
+  const [lastMatch, setLastMatch] = useState<Partita | null>(null);
   const [teamMatches, setTeamMatches] = useState<Partita[]>([]);
   const [loadingData, setLoadingData] = useState(false);
 
@@ -26,7 +26,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
     if (selectedTeam) {
       fetchTeamData();
     } else {
-      setTeamStanding(null);
+      setLastMatch(null);
       setTeamMatches([]);
     }
   }, [selectedTeam, selectedTournament, selectedCategory]);
@@ -66,31 +66,29 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
     setLoadingData(true);
 
     try {
-      const standingsTable = selectedTournament === 'invernale' 
-        ? `standings_${selectedCategory}` 
-        : `standings_estivo_${selectedCategory}`;
-      
       const calendarTable = selectedTournament === 'invernale'
         ? `calendario_${selectedCategory}`
         : `calendario_estivo_${selectedCategory}`;
 
-      // 1. Fetch Classifica della squadra
-      const { data: standingData, error: standingError } = await supabase
-        .from(standingsTable)
+      const today = new Date().toISOString().split('T')[0];
+
+      // 1. Fetch Ultima partita della squadra
+      const { data: pastMatches, error: pastError } = await supabase
+        .from(calendarTable)
         .select('*')
-        .eq('squadra', selectedTeam)
-        .single();
+        .or(`squadra_casa.eq."${selectedTeam}",squadra_trasferta.eq."${selectedTeam}"`)
+        .lt('data', today)
+        .order('data', { ascending: false })
+        .order('ora', { ascending: false })
+        .limit(1);
       
-      if (!standingError && standingData) {
-        setTeamStanding(standingData);
+      if (!pastError && pastMatches && pastMatches.length > 0) {
+        setLastMatch(pastMatches[0]);
       } else {
-        setTeamStanding(null);
+        setLastMatch(null);
       }
 
-      // 2. Fetch Partite della squadra (Prossime 4 o passate se non ci sono)
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Prima cerchiamo le PROSSIME partite (data >= oggi)
+      // 2. Fetch Prossime Partite della squadra (max 3)
       const { data: futureMatches, error: futureError } = await supabase
         .from(calendarTable)
         .select('*')
@@ -103,25 +101,11 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       if (!futureError && futureMatches && futureMatches.length > 0) {
         setTeamMatches(futureMatches);
       } else {
-         // Se non ci sono partite future, prendiamo le ULTIME passate (data < oggi)
-        const { data: pastMatches, error: pastError } = await supabase
-        .from(calendarTable)
-        .select('*')
-        .or(`squadra_casa.eq."${selectedTeam}",squadra_trasferta.eq."${selectedTeam}"`)
-        .lt('data', today)
-        .order('data', { ascending: false })
-        .order('ora', { ascending: false })
-        .limit(3);
-
-        if (!pastError && pastMatches) {
-          setTeamMatches(pastMatches);
-        } else {
-          setTeamMatches([]);
-        }
+        setTeamMatches([]);
       }
     } catch (e) {
       console.error(e);
-      setTeamStanding(null);
+      setLastMatch(null);
       setTeamMatches([]);
     } finally {
       setLoadingData(false);
@@ -284,44 +268,64 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* WIDGET 1: Statistiche Squadra Selezionata */}
+        {/* WIDGET 1: Statistiche Ultima Partita */}
         <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 flex flex-col">
           <h3 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
             <span className="text-blue-500 mr-2"><Activity size={24} /></span>
-            {selectedTeam ? `Statistiche ${selectedTeam}` : 'Seleziona una squadra'}
+            Statistiche Ultima Partita
           </h3>
           
           <div className="flex-1 bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col justify-center items-center">
-            {loadingData ? (
+             {loadingData ? (
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>
-            ) : !teamStanding ? (
-              <div className="text-slate-400 text-center text-sm">Seleziona una squadra per vederne le statistiche dalla classifica.</div>
+            ) : !lastMatch ? (
+              <div className="flex flex-col justify-center items-center text-slate-400">
+                <Activity size={32} className="mb-2 opacity-50" />
+                <p className="text-sm font-medium">Nessuna partita disputata trovata</p>
+                <p className="text-xs mt-1">per {selectedTeam || 'questa squadra'}.</p>
+              </div>
             ) : (
-              <div className="w-full">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="text-center">
-                    <span className="block text-4xl font-black text-slate-800">{teamStanding.posizione}°</span>
-                    <span className="text-xs font-bold text-slate-400 uppercase">Posizione</span>
-                  </div>
-                  <div className="text-center">
-                    <span className="block text-4xl font-black text-yellow-600">{teamStanding.punti}</span>
-                    <span className="text-xs font-bold text-yellow-800/60 uppercase">Punti</span>
-                  </div>
-                  <div className="text-center">
-                     <span className="block text-2xl font-bold text-slate-600 mt-2">{teamStanding.giocate}</span>
-                     <span className="text-xs font-bold text-slate-400 uppercase">Partite (V:{teamStanding.vittorie}-N:{teamStanding.pareggi}-P:{teamStanding.sconfitte})</span>
+              <div className="w-full flex flex-col items-center">
+                <div className="text-center mb-6">
+                  <span className="text-xs font-bold text-white bg-blue-500 px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                    {lastMatch.tipo_competizione === 'playoff' ? '🏆 Playoff' : lastMatch.tipo_competizione === 'coppa' ? '🥇 Coppa' : '⚽ Campionato'} - {lastMatch.fase_coppa ? lastMatch.fase_coppa : `Giornata ${lastMatch.giornata}`}
+                  </span>
+                  <div className="text-sm text-slate-500 font-bold mt-3 flex items-center justify-center">
+                    <Calendar size={14} className="mr-1" /> {formatDate(lastMatch.data)}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mt-4">
-                  <div className="bg-green-50 rounded-lg p-3 border border-green-100 text-center">
-                     <p className="text-xs text-green-600 font-bold uppercase mb-1">Reti Fatte</p>
-                     <p className="text-2xl font-black text-green-700">{teamStanding.reti_fatte}</p>
+                <div className="w-full flex items-center justify-between bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mb-4">
+                  <div className="text-center flex-1">
+                    <span className={`block text-lg sm:text-xl font-black ${lastMatch.squadra_casa === selectedTeam ? 'text-blue-600' : 'text-slate-700'}`}>
+                      {lastMatch.squadra_casa}
+                    </span>
                   </div>
-                  <div className="bg-red-50 rounded-lg p-3 border border-red-100 text-center">
-                     <p className="text-xs text-red-600 font-bold uppercase mb-1">Reti Subite</p>
-                     <p className="text-2xl font-black text-red-700">{teamStanding.reti_subite}</p>
+                  
+                  <div className="text-center px-4 flex flex-col items-center">
+                    <div className="bg-slate-800 text-white px-4 py-2 rounded-xl shadow-inner font-black text-3xl tracking-widest min-w-[100px]">
+                      {lastMatch.gol_casa !== null ? lastMatch.gol_casa : '-'} : {lastMatch.gol_trasferta !== null ? lastMatch.gol_trasferta : '-'}
+                    </div>
                   </div>
+
+                  <div className="text-center flex-1">
+                    <span className={`block text-lg sm:text-xl font-black ${lastMatch.squadra_trasferta === selectedTeam ? 'text-blue-600' : 'text-slate-700'}`}>
+                      {lastMatch.squadra_trasferta}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-4 mt-2">
+                  {lastMatch.campo && (
+                    <span className="inline-flex items-center text-xs text-slate-600 font-bold bg-slate-200 px-3 py-1.5 rounded-full">
+                       Campo: {lastMatch.campo}
+                    </span>
+                  )}
+                  {lastMatch.ora && (
+                    <span className="inline-flex items-center text-xs text-slate-600 font-bold bg-slate-200 px-3 py-1.5 rounded-full">
+                       Ore: {lastMatch.ora.substring(0, 5)}
+                    </span>
+                  )}
                 </div>
               </div>
             )}
