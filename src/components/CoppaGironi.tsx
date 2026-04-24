@@ -38,8 +38,22 @@ const CoppaGironi: React.FC<CoppaGironiProps> = ({ data, loading, error }) => {
   const gironiData = gironi.map(girone => ({
     girone,
     squadre: data
-      .filter(team => team.girone === girone)
-      .sort((a, b) => (a.posizione_coppa || 0) - (b.posizione_coppa || 0))
+      .filter(team => team.girone && team.girone.toUpperCase() === girone.toUpperCase())
+      .sort((a, b) => {
+        // Prima ordina per posizione_coppa se disponibile
+        if (a.posizione_coppa !== null && b.posizione_coppa !== null) {
+          return (a.posizione_coppa || 99) - (b.posizione_coppa || 99);
+        }
+        // Altrimenti ordina per punti_coppa (decrescente)
+        const puntiDiff = (b.punti_coppa || 0) - (a.punti_coppa || 0);
+        if (puntiDiff !== 0) return puntiDiff;
+        // A parità di punti, ordina per differenza reti
+        const diffRetiA = (a.reti_fatte_coppa || 0) - (a.reti_subite_coppa || 0);
+        const diffRetiB = (b.reti_fatte_coppa || 0) - (b.reti_subite_coppa || 0);
+        if (diffRetiB !== diffRetiA) return diffRetiB - diffRetiA;
+        // A parità di differenza reti, ordina per gol fatti
+        return (b.reti_fatte_coppa || 0) - (a.reti_fatte_coppa || 0);
+      })
       .slice(0, 4)
   }));
 
@@ -96,7 +110,8 @@ const CoppaGironi: React.FC<CoppaGironiProps> = ({ data, loading, error }) => {
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {squadre.map((team, index) => {
-                    const posizione = team.posizione_coppa || index + 1;
+                    // Usa la posizione nel girone (index + 1) invece di posizione_coppa
+                    const posizione = index + 1;
                     const isQualified = posizione <= 2;
                     const isEliminated = posizione > 2;
 
