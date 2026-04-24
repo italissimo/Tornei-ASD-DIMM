@@ -10,7 +10,7 @@ const CalendarioPage: React.FC = () => {
   const [partite, setPartite] = useState<Partita[]>([]);
   const [squadre, setSquadre] = useState<string[]>([]);
   const [selectedSquadra, setSelectedSquadra] = useState<string>('');
-  const [competitionFilter, setCompetitionFilter] = useState<'tutti' | 'campionato' | 'coppa'>('tutti');
+  const [competitionFilter, setCompetitionFilter] = useState<'tutti' | 'campionato' | 'coppa' | 'playoff'>('tutti');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +64,8 @@ const CalendarioPage: React.FC = () => {
       query = query.eq('tipo_competizione', 'campionato');
     } else if (competitionFilter === 'coppa') {
       query = query.eq('tipo_competizione', 'coppa');
+    } else if (competitionFilter === 'playoff') {
+      query = query.eq('tipo_competizione', 'playoff');
     }
 
     query = query
@@ -126,6 +128,23 @@ const CalendarioPage: React.FC = () => {
 
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          {label}
+        </span>
+      );
+    }
+
+    if (partita.tipo_competizione === 'playoff') {
+      let label = 'Playoff';
+      if (partita.fase_coppa === 'playoff_gironi' && partita.girone) {
+        label = `Playoff - Girone ${partita.girone}`;
+      } else if (partita.fase_coppa === 'playoff_semifinali') {
+        label = 'Playoff - Semifinali';
+      } else if (partita.fase_coppa === 'playoff_finali') {
+        label = 'Playoff - Finale';
+      }
+
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
           {label}
         </span>
       );
@@ -213,12 +232,13 @@ const CalendarioPage: React.FC = () => {
               <div className="relative w-full sm:w-48">
                 <select
                   value={competitionFilter}
-                  onChange={(e) => setCompetitionFilter(e.target.value as 'tutti' | 'campionato' | 'coppa')}
+                  onChange={(e) => setCompetitionFilter(e.target.value as 'tutti' | 'campionato' | 'coppa' | 'playoff')}
                   className="w-full appearance-none bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
                   <option value="tutti">Tutte le competizioni</option>
                   <option value="campionato">Solo Campionato</option>
                   <option value="coppa">Solo Coppa</option>
+                  <option value="playoff">Solo Playoff</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               </div>
