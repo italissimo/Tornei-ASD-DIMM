@@ -35,7 +35,7 @@ const PlayoffBracket: React.FC<PlayoffBracketProps> = ({ category }) => {
         .from(table)
         .select('*')
         .eq('tipo_competizione', 'playoff')
-        .eq('fase_coppa', 'semifinali')
+        .eq('fase_coppa', 'playoff_semifinali')
         .order('data', { ascending: true, nullsFirst: false })
         .order('ora', { ascending: true, nullsFirst: false });
 
@@ -45,7 +45,7 @@ const PlayoffBracket: React.FC<PlayoffBracketProps> = ({ category }) => {
         .from(table)
         .select('*')
         .eq('tipo_competizione', 'playoff')
-        .eq('fase_coppa', 'finale')
+        .eq('fase_coppa', 'playoff_finali')
         .maybeSingle();
 
       if (finaleError && finaleError.code !== 'PGRST116') throw finaleError;

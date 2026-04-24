@@ -8,7 +8,7 @@ export interface Partita {
   squadra_trasferta: string | null;
   risultato: string | null;
   tipo_competizione: 'campionato' | 'coppa' | 'playoff' | null;
-  fase_coppa: 'gironi' | 'quarti' | 'semifinali' | 'finale' | null;
+  fase_coppa: 'gironi' | 'quarti' | 'semifinali' | 'finale' | 'playoff_gironi' | 'playoff_semifinali' | 'playoff_finali' | null;
   girone: string | null;
 }
 
