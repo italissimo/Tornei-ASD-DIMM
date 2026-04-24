@@ -10,7 +10,10 @@ import {
   X,
   Settings,
   CalendarDays,
-  Award
+  Award,
+  ChevronDown,
+  Snowflake,
+  Sun
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -30,14 +33,29 @@ const Navigation: React.FC<NavigationProps> = ({
   isMobileMenuOpen,
   setIsMobileMenuOpen
 }) => {
-  const menuItems = [
+  const [openGroup, setOpenGroup] = React.useState<string | null>('invernale');
+
+  // React into a clean grouping array
+  const topMenu = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'download', label: 'Scarica App', icon: Download },
     { id: 'rules', label: 'Regolamento', icon: BookOpen },
-    { id: 'standings', label: 'Classifiche', icon: Trophy },
-    { id: 'coppa', label: 'Coppa Italia', icon: Award },
-    { id: 'playoff', label: 'Playoff', icon: Trophy },
-    { id: 'calendario', label: 'Calendario', icon: CalendarDays },
+  ];
+
+  const invernoMenu = [
+    { id: 'invernale-standings', label: 'Classifiche', icon: Trophy },
+    { id: 'invernale-coppa', label: 'Coppa Italia', icon: Award },
+    { id: 'invernale-playoff', label: 'Playoff', icon: Trophy },
+    { id: 'invernale-calendario', label: 'Calendario', icon: CalendarDays },
+  ];
+
+  const estivoMenu = [
+    { id: 'estivo-standings', label: 'Classifiche & Gironi', icon: Trophy },
+    { id: 'estivo-tabellone', label: 'Fase Finale', icon: Award },
+    { id: 'estivo-calendario', label: 'Calendario', icon: CalendarDays },
+  ];
+
+  const bottomMenu = [
     { id: 'highlights', label: 'Highlights', icon: Camera },
     ...(isAdmin ? [{ id: 'admin', label: 'Admin', icon: Settings }] : [])
   ];
@@ -45,6 +63,36 @@ const Navigation: React.FC<NavigationProps> = ({
   const handleItemClick = (sectionId: string) => {
     onSectionChange(sectionId);
     setIsMobileMenuOpen(false);
+  };
+
+  const toggleGroup = (group: string) => {
+    setOpenGroup(openGroup === group ? null : group);
+  };
+
+  const renderMenuItem = (item: any, customActiveColor?: string) => {
+    const Icon = item.icon;
+    const isActive = activeSection === item.id;
+    const activeClass = customActiveColor 
+      ? customActiveColor 
+      : 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/30 scale-105';
+
+    return (
+      <li key={item.id}>
+        <button
+          onClick={() => handleItemClick(item.id)}
+          className={`
+            w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 transform
+            ${isActive
+              ? activeClass
+              : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:translate-x-1'
+            }
+          `}
+        >
+          <Icon size={20} />
+          <span className="font-medium text-sm">{item.label}</span>
+        </button>
+      </li>
+    );
   };
 
   return (
@@ -87,28 +135,55 @@ const Navigation: React.FC<NavigationProps> = ({
             <p className="text-xs text-center text-slate-400 mt-1">Tornei di Calcio</p>
           </div>
           
-          <ul className="space-y-2">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <li key={item.id}>
-                  <button
-                    onClick={() => handleItemClick(item.id)}
-                    className={`
-                      w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 transform
-                      ${activeSection === item.id
-                        ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/30 scale-105'
-                        : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:translate-x-1'
-                      }
-                    `}
-                  >
-                    <Icon size={20} />
-                    <span className="font-medium">{item.label}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="space-y-4">
+            <ul className="space-y-2">
+              {topMenu.map(item => renderMenuItem(item))}
+            </ul>
+
+            {/* Torneo Invernale Accordion */}
+            <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 overflow-hidden">
+              <button
+                onClick={() => toggleGroup('invernale')}
+                className="w-full flex items-center justify-between px-4 py-3 text-slate-200 hover:text-white hover:bg-slate-700/50 transition-colors"
+              >
+                <div className="flex items-center space-x-3">
+                  <Snowflake size={20} className="text-cyan-400" />
+                  <span className="font-bold text-sm tracking-wide">TORNEO INVERNALE</span>
+                </div>
+                <ChevronDown size={18} className={`transform transition-transform ${openGroup === 'invernale' ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {openGroup === 'invernale' && (
+                <ul className="px-2 pb-2 space-y-1">
+                  {invernoMenu.map(item => renderMenuItem(item, 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-500/30 scale-105'))}
+                </ul>
+              )}
+            </div>
+
+            {/* Torneo Estivo Accordion */}
+            <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 overflow-hidden">
+              <button
+                onClick={() => toggleGroup('estivo')}
+                className="w-full flex items-center justify-between px-4 py-3 text-slate-200 hover:text-white hover:bg-slate-700/50 transition-colors"
+              >
+                <div className="flex items-center space-x-3">
+                  <Sun size={20} className="text-orange-400" />
+                  <span className="font-bold text-sm tracking-wide">TORNEO ESTIVO</span>
+                </div>
+                <ChevronDown size={18} className={`transform transition-transform ${openGroup === 'estivo' ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {openGroup === 'estivo' && (
+                <ul className="px-2 pb-2 space-y-1">
+                  {estivoMenu.map(item => renderMenuItem(item, 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30 scale-105'))}
+                </ul>
+              )}
+            </div>
+
+            <ul className="space-y-2">
+              {bottomMenu.map(item => renderMenuItem(item))}
+            </ul>
+          </div>
 
           <div className="mt-8 pt-8 border-t border-slate-700">
             <button

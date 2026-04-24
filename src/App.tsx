@@ -12,6 +12,11 @@ import CalendarioPage from './pages/CalendarioPage';
 import HighlightsPage from './pages/HighlightsPage';
 import AdminPage from './pages/AdminPage';
 
+// Estivo New Pages
+import EstivoStandingsPage from './pages/EstivoStandingsPage';
+import EstivoTabellonePage from './pages/EstivoTabellonePage';
+import EstivoCalendarioPage from './pages/EstivoCalendarioPage';
+
 function App() {
   const { user, login, logout, isLoading } = useAuth();
   const [activeSection, setActiveSection] = React.useState('home');
@@ -42,14 +47,25 @@ function App() {
         return <DownloadPage />;
       case 'rules':
         return <RulesPage isAdmin={user.isAdmin} />;
-      case 'standings':
+      
+      // Invernale
+      case 'invernale-standings':
         return <StandingsPage isAdmin={user.isAdmin} />;
-      case 'coppa':
+      case 'invernale-coppa':
         return <CoppaPage />;
-      case 'playoff':
+      case 'invernale-playoff':
         return <PlayoffPage />;
-      case 'calendario':
+      case 'invernale-calendario':
         return <CalendarioPage />;
+      
+      // Estivo
+      case 'estivo-standings':
+        return <EstivoStandingsPage isAdmin={user.isAdmin} />;
+      case 'estivo-tabellone':
+        return <EstivoTabellonePage />;
+      case 'estivo-calendario':
+        return <EstivoCalendarioPage />;
+
       case 'highlights':
         return <HighlightsPage isAdmin={user.isAdmin} />;
       case 'admin':
@@ -59,8 +75,17 @@ function App() {
     }
   };
 
+  const isEstivo = activeSection.startsWith('estivo-');
+  const isInvernale = activeSection.startsWith('invernale-');
+
+  const themeClasses = isEstivo 
+    ? 'bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100' 
+    : isInvernale 
+      ? 'bg-gradient-to-br from-white via-blue-50 to-cyan-100' 
+      : 'bg-slate-50';
+
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className={`min-h-screen ${themeClasses} flex transition-all duration-700`}>
       <Navigation
         activeSection={activeSection}
         onSectionChange={setActiveSection}
