@@ -42,7 +42,7 @@ function App() {
   const renderContent = () => {
     switch (activeSection) {
       case 'home':
-        return <HomePage />;
+        return <HomePage onNavigate={setActiveSection} />;
       case 'download':
         return <DownloadPage />;
       case 'rules':
@@ -69,9 +69,9 @@ function App() {
       case 'highlights':
         return <HighlightsPage isAdmin={user.isAdmin} />;
       case 'admin':
-        return user.isAdmin ? <AdminPage /> : <HomePage />;
+        return user.isAdmin ? <AdminPage /> : <HomePage onNavigate={setActiveSection} />;
       default:
-        return <HomePage />;
+        return <HomePage onNavigate={setActiveSection} />;
     }
   };
 
