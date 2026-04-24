@@ -5,7 +5,7 @@ import PlayoffGironi from '../components/PlayoffGironi';
 import PlayoffBracket from '../components/PlayoffBracket';
 
 const PlayoffPage: React.FC = () => {
-  const [activeTab] = useState<'calcio5'>('calcio5'); // Playoff per ora lo supportiamo solo a 5
+  const [activeTab, setActiveTab] = useState<'calcio5' | 'calcio7'>('calcio5');
   const [activePhase, setActivePhase] = useState<'gironi' | 'eliminazione'>('gironi');
 
   const { data: standings, loading, error } = useStandings(activeTab);
@@ -17,11 +17,27 @@ const PlayoffPage: React.FC = () => {
         <h1 className="text-4xl font-bold text-slate-800">Playoff (Tiki Taka Cup)</h1>
       </div>
 
-      {/* Rimosso lo switch tra Calcio a 5 e 7 se non richiesto. Aggiungilo come in Coppa se necessario per il Calcio a 7 futuri */}
       <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
-        <div className="flex-1 px-4 py-2 rounded-md text-sm font-medium bg-white text-slate-900 shadow text-center cursor-default">
+        <button
+          onClick={() => setActiveTab('calcio5')}
+          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'calcio5'
+              ? 'bg-white text-slate-900 shadow'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
           Calcio a 5
-        </div>
+        </button>
+        <button
+          onClick={() => setActiveTab('calcio7')}
+          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'calcio7'
+              ? 'bg-white text-slate-900 shadow'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          Calcio a 7
+        </button>
       </div>
 
       <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
@@ -58,7 +74,7 @@ const PlayoffPage: React.FC = () => {
             <div className="space-y-2 text-xs text-slate-600">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-green-50 border-l-4 border-green-500 rounded-sm"></div>
-                <span>Passaggio alle Semifinali (Prime 2 Gir. A/B oppure Prime 4 Gir. C/Unico)</span>
+                <span>Passaggio alle Semifinali (Prime 2 nei gironi divisi, Prime 4 nei gironi unici)</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-slate-50 border-l-4 border-slate-300 rounded-sm"></div>

@@ -4,7 +4,7 @@ import { supabase, VincitoreCoppa } from '../lib/supabase';
 import { Partita } from '../types/calendario';
 
 interface PlayoffBracketProps {
-  category: 'calcio5';
+  category: 'calcio5' | 'calcio7';
 }
 
 const PlayoffBracket: React.FC<PlayoffBracketProps> = ({ category }) => {
@@ -29,7 +29,7 @@ const PlayoffBracket: React.FC<PlayoffBracketProps> = ({ category }) => {
       setLoading(true);
       setError(null);
 
-      const table = 'calendario_calcio5';
+      const table = category === 'calcio5' ? 'calendario_calcio5' : 'calendario_calcio7';
 
       const { data: semifinaliData, error: semifinaliError } = await supabase
         .from(table)
