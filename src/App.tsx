@@ -7,6 +7,7 @@ import DownloadPage from './pages/DownloadPage';
 import RulesPage from './pages/RulesPage';
 import StandingsPage from './pages/StandingsPage';
 import CoppaPage from './pages/CoppaPage';
+import PlayoffPage from './pages/PlayoffPage';
 import CalendarioPage from './pages/CalendarioPage';
 import HighlightsPage from './pages/HighlightsPage';
 import AdminPage from './pages/AdminPage';
@@ -45,6 +46,8 @@ function App() {
         return <StandingsPage isAdmin={user.isAdmin} />;
       case 'coppa':
         return <CoppaPage />;
+      case 'playoff':
+        return <PlayoffPage />;
       case 'calendario':
         return <CalendarioPage />;
       case 'highlights':

@@ -46,6 +46,17 @@ export const useStandings = (category: 'calcio5' | 'calcio7') => {
             reti_subite_coppa,
             ammonizioni_coppa,
             espulsioni_coppa,
+            girone_playoff,
+            posizione_playoff,
+            punti_playoff,
+            giocate_playoff,
+            vittorie_playoff,
+            pareggi_playoff,
+            sconfitte_playoff,
+            reti_fatte_playoff,
+            reti_subite_playoff,
+            ammonizioni_playoff,
+            espulsioni_playoff,
             last_update
           `)
           .order('posizione', { ascending: true });

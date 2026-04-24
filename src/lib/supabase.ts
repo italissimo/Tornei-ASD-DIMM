@@ -72,6 +72,17 @@ export interface StandingsRow {
   reti_subite_coppa: number | null;
   ammonizioni_coppa: number | null;
   espulsioni_coppa: number | null;
+  girone_playoff: string | null;
+  posizione_playoff: number | null;
+  punti_playoff: number | null;
+  giocate_playoff: number | null;
+  vittorie_playoff: number | null;
+  pareggi_playoff: number | null;
+  sconfitte_playoff: number | null;
+  reti_fatte_playoff: number | null;
+  reti_subite_playoff: number | null;
+  ammonizioni_playoff: number | null;
+  espulsioni_playoff: number | null;
   last_update: string;
 }
 

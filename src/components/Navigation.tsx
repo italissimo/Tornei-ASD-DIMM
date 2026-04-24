@@ -36,6 +36,7 @@ const Navigation: React.FC<NavigationProps> = ({
     { id: 'rules', label: 'Regolamento', icon: BookOpen },
     { id: 'standings', label: 'Classifiche', icon: Trophy },
     { id: 'coppa', label: 'Coppa Italia', icon: Award },
+    { id: 'playoff', label: 'Playoff', icon: Trophy },
     { id: 'calendario', label: 'Calendario', icon: CalendarDays },
     { id: 'highlights', label: 'Highlights', icon: Camera },
     ...(isAdmin ? [{ id: 'admin', label: 'Admin', icon: Settings }] : [])
