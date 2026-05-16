@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Eye, Heart, Calendar, Tag } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Calendar, Tag } from 'lucide-react';
 import { HighlightWithUrl } from '../types/highlights';
 
 interface HighlightModalProps {
@@ -9,7 +9,7 @@ interface HighlightModalProps {
   onClose: () => void;
   onNext: () => void;
   onPrevious: () => void;
-  onLike: (id: number) => void;
+  onLike: (id: string) => void;
 }
 
 const HighlightModal: React.FC<HighlightModalProps> = ({
@@ -187,18 +187,6 @@ const HighlightModal: React.FC<HighlightModalProps> = ({
               <div className="flex items-center space-x-2">
                 <Calendar size={16} />
                 <span>Caricato il {formatDate(highlight.upload_date)}</span>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Eye size={16} />
-                  <span>{highlight.views} visualizzazioni</span>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Heart size={16} />
-                  <span>{highlight.likes} mi piace</span>
-                </div>
               </div>
             </div>
 

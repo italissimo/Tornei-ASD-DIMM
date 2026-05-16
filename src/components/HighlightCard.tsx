@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Image, Eye, Heart, Star, Sparkles } from 'lucide-react';
+import { Play, Image, Star, Sparkles } from 'lucide-react';
 import { HighlightWithUrl } from '../types/highlights';
 
 interface HighlightCardProps {
@@ -187,16 +187,6 @@ const HighlightCard: React.FC<HighlightCardProps> = ({ highlight, onClick }) => 
         {/* Footer */}
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span>{formatDate(highlight.upload_date)}</span>
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-1">
-              <Eye size={12} />
-              <span>{highlight.views}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Heart size={12} />
-              <span>{highlight.likes}</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

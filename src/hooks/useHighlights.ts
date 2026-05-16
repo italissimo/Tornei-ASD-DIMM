@@ -47,13 +47,10 @@ export const useHighlights = (category: FilterCategory, type: FilterType) => {
             id: highlight.id,
             title: highlight.titolo,
             description: highlight.descrizione,
-            file_path: highlight.file_path ?? '',
             file_type: highlight.file_type,
             category: highlight.category,
             upload_date: highlight.upload_date,
             featured: highlight.featured,
-            views: highlight.views ?? 0,
-            likes: highlight.likes ?? 0,
             publicUrl: highlight.url
           }));
 
@@ -70,47 +67,5 @@ export const useHighlights = (category: FilterCategory, type: FilterType) => {
     fetchHighlights();
   }, [category, type]);
 
-  const incrementViews = async (highlightId: number) => {
-    if (!supabase) return;
-
-    try {
-      const highlight = highlights.find((h: HighlightWithUrl) => h.id === highlightId);
-      if (!highlight) return;
-
-      await supabase
-        .from('highlights')
-        .update({ views: highlight.views + 1 })
-        .eq('id', highlightId);
-
-      // Update local state
-      setHighlights((prev: HighlightWithUrl[]) => prev.map((h: HighlightWithUrl) => 
-        h.id === highlightId ? { ...h, views: h.views + 1 } : h
-      ));
-    } catch (error) {
-      console.error('Error incrementing views:', error);
-    }
-  };
-
-  const toggleLike = async (highlightId: number) => {
-    if (!supabase) return;
-
-    try {
-      const highlight = highlights.find((h: HighlightWithUrl) => h.id === highlightId);
-      if (!highlight) return;
-
-      await supabase
-        .from('highlights')
-        .update({ likes: highlight.likes + 1 })
-        .eq('id', highlightId);
-
-      // Update local state
-      setHighlights((prev: HighlightWithUrl[]) => prev.map((h: HighlightWithUrl) => 
-        h.id === highlightId ? { ...h, likes: h.likes + 1 } : h
-      ));
-    } catch (error) {
-      console.error('Error toggling like:', error);
-    }
-  };
-
-  return { highlights, loading, error, incrementViews, toggleLike };
+  return { highlights, loading, error };
 };

@@ -20,13 +20,13 @@ const EstivoStandingsPage: React.FC<Props> = ({ isAdmin }) => {
     if (!supabase) return;
     setLoading(true);
     
-    // Le nuove tabelle create da schema (aggiunto _estivo)
     const table = activeTab === 'calcio5' ? 'standings_estivo_calcio5' : 'standings_estivo_calcio7';
 
     try {
       const { data, error } = await supabase
         .from(table)
         .select('*')
+        .order('serie', { ascending: true })
         .order('punti', { ascending: false })
         .order('vittorie', { ascending: false })
         .order('reti_fatte', { ascending: false });
@@ -77,24 +77,26 @@ const EstivoStandingsPage: React.FC<Props> = ({ isAdmin }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8">
-        <div className="bg-white rounded-xl shadow-lg border border-orange-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-400 to-red-500 px-6 py-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white flex items-center">
-              <Trophy size={20} className="mr-2" />
-              Classifica {activeTab === 'calcio5' ? 'Calcio a 5' : 'Calcio a 7'}
-            </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {(['A', 'B', 'C', 'D'] as const).map((girone) => (
+          <div key={girone} className="bg-white rounded-xl shadow-lg border border-orange-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-orange-400 to-red-500 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white flex items-center">
+                <Trophy size={20} className="mr-2" />
+                Girone {girone}
+              </h2>
+            </div>
+            <div className="p-1 min-h-[200px]">
+              <StandingsSerieTable
+                data={standings}
+                serie={girone}
+                loading={loading}
+                error={null}
+                qualificanti={2}
+              />
+            </div>
           </div>
-          
-          <div className="p-1 min-h-[300px]">
-            <StandingsSerieTable
-              data={standings}
-              serie="A"
-              loading={loading}
-              error={null}
-            />
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );

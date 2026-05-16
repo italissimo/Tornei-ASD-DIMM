@@ -17,7 +17,7 @@ const HighlightsPage: React.FC<HighlightsPageProps> = ({ isAdmin }) => {
   const [selectedHighlight, setSelectedHighlight] = useState<HighlightWithUrl | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { highlights, loading, error, incrementViews, toggleLike } = useHighlights(categoryFilter, typeFilter);
+  const { highlights, loading, error } = useHighlights(categoryFilter, typeFilter);
 
   // Filter highlights by search query
   const filteredHighlights = highlights.filter(highlight =>
@@ -55,7 +55,6 @@ const HighlightsPage: React.FC<HighlightsPageProps> = ({ isAdmin }) => {
   const handleHighlightClick = (highlight: HighlightWithUrl) => {
     setSelectedHighlight(highlight);
     setIsModalOpen(true);
-    incrementViews(highlight.id);
   };
 
   const handleModalClose = () => {
@@ -69,7 +68,6 @@ const HighlightsPage: React.FC<HighlightsPageProps> = ({ isAdmin }) => {
     const nextIndex = (currentIndex + 1) % filteredHighlights.length;
     const nextHighlight = filteredHighlights[nextIndex];
     setSelectedHighlight(nextHighlight);
-    incrementViews(nextHighlight.id);
   };
 
   const handlePrevious = () => {
@@ -78,7 +76,6 @@ const HighlightsPage: React.FC<HighlightsPageProps> = ({ isAdmin }) => {
     const prevIndex = currentIndex === 0 ? filteredHighlights.length - 1 : currentIndex - 1;
     const prevHighlight = filteredHighlights[prevIndex];
     setSelectedHighlight(prevHighlight);
-    incrementViews(prevHighlight.id);
   };
 
   const getFilterCount = (category: FilterCategory, type: FilterType) => {
@@ -314,7 +311,7 @@ const HighlightsPage: React.FC<HighlightsPageProps> = ({ isAdmin }) => {
         onClose={handleModalClose}
         onNext={handleNext}
         onPrevious={handlePrevious}
-        onLike={toggleLike}
+        onLike={() => {}}
       />
 
       {/* Info Section */}

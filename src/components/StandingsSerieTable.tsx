@@ -6,10 +6,11 @@ interface StandingsSerieTableProps {
   data: StandingsRow[];
   loading: boolean;
   error: string | null;
-  serie: 'A' | 'B';
+  serie: 'A' | 'B' | 'C' | 'D';
+  qualificanti?: number;
 }
 
-const StandingsSerieTable: React.FC<StandingsSerieTableProps> = ({ data, loading, error, serie }) => {
+const StandingsSerieTable: React.FC<StandingsSerieTableProps> = ({ data, loading, error, serie, qualificanti = 3 }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -94,7 +95,7 @@ const StandingsSerieTable: React.FC<StandingsSerieTableProps> = ({ data, loading
                   <tr
                     key={team.squadra}
                     className={`hover:bg-slate-50 transition-colors ${
-                      relativePos <= 3 ? 'bg-green-50 border-l-4 border-green-500' : ''
+                      relativePos <= qualificanti ? 'bg-green-50 border-l-4 border-green-500' : ''
                     }`}
                   >
                     <td className="px-4 py-4 whitespace-nowrap">
@@ -138,7 +139,7 @@ const StandingsSerieTable: React.FC<StandingsSerieTableProps> = ({ data, loading
             return (
               <div
                 key={team.squadra}
-                className={`p-4 ${relativePos <= 3 ? 'bg-green-50 border-l-4 border-green-500' : ''}`}
+                className={`p-4 ${relativePos <= qualificanti ? 'bg-green-50 border-l-4 border-green-500' : ''}`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-3">
