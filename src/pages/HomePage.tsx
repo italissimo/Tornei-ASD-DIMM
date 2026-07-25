@@ -13,7 +13,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       <div className="flex justify-center">
         <div className="w-full max-w-sm">
           <img
-            src="/locandina-invernale.jpg"
+            src="/locandina-invernale.jpeg"
             alt="Campionato Invernale Calcio A5 e A7 - ASD DIMM - Start 5 Ottobre 2026 - Tiki Taka Lesmo"
             className="w-full rounded-3xl select-none"
             style={{ boxShadow: '0 8px 48px rgba(34,197,94,0.35), 0 4px 24px rgba(0,0,0,0.55)' }}

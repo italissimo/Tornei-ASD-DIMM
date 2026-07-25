@@ -12,47 +12,20 @@ const FASI = [
 
 type FaseKey = typeof FASI[number]['key'];
 
-/** Estrae i gol da una stringa risultato in qualsiasi formato ragionevole.
- *  Gestisce: "3-0", "3 - 0", "3:0", "3 : 0", "3(8)-3", "3-3(8)" */
-function parseRisultato(raw: string): { goalCasa: string; goalTrasferta: string } | null {
-  const s = raw.trim();
-  if (!s) return null;
-  // Tenta prima col trattino, poi con i due punti
-  for (const sep of ['-', ':']) {
-    const idx = s.indexOf(sep);
-    if (idx > 0 && idx < s.length - 1) {
-      return {
-        goalCasa:      s.slice(0, idx).trim(),
-        goalTrasferta: s.slice(idx + 1).trim(),
-      };
-    }
-  }
-  return null;
-}
-
-/** Ricava il nome del vincitore dalla stringa risultato */
+/** Ricava il nome del vincitore da una partita estiva (gol_casa/gol_trasferta interi) */
 function getWinner(match: Partita): string | null {
-  if (!match.risultato) return null;
-  const r = parseRisultato(match.risultato);
-  if (!r) return null;
-  const g1 = parseInt(r.goalCasa.replace(/\(.*/, ''));
-  const g2 = parseInt(r.goalTrasferta.replace(/\(.*/, ''));
-  if (isNaN(g1) || isNaN(g2)) return null;
+  const g1 = match.gol_casa;
+  const g2 = match.gol_trasferta;
+  if (g1 === null || g2 === null) return null;
   if (g1 > g2) return match.squadra_casa;
   if (g2 > g1) return match.squadra_trasferta;
-  // rigori
-  const p1 = r.goalCasa.match(/\((\d+)/);
-  const p2 = r.goalTrasferta.match(/\((\d+)/);
-  if (p1 && p2) {
-    if (parseInt(p1[1]) > parseInt(p2[1])) return match.squadra_casa;
-    if (parseInt(p2[1]) > parseInt(p1[1])) return match.squadra_trasferta;
-  }
-  return null;
+  return null; // pareggio
 }
 
 const MatchCard: React.FC<{ match: Partita }> = ({ match }) => {
-  const parsed = match.risultato ? parseRisultato(match.risultato) : null;
-  const hasResult = parsed !== null;
+  const hasResult = match.gol_casa !== null && match.gol_trasferta !== null;
+  const goalCasa      = hasResult ? String(match.gol_casa)      : undefined;
+  const goalTrasferta = hasResult ? String(match.gol_trasferta) : undefined;
   const winner = hasResult ? getWinner(match) : null;
 
   const teamRow = (name: string | null, goal: string | undefined, isWinner: boolean) => (
@@ -79,8 +52,8 @@ const MatchCard: React.FC<{ match: Partita }> = ({ match }) => {
         : 'bg-orange-50 border-orange-200'
     }`}>
       <div className="divide-y divide-orange-100">
-        {teamRow(match.squadra_casa,      parsed?.goalCasa,      winner === match.squadra_casa)}
-        {teamRow(match.squadra_trasferta, parsed?.goalTrasferta, winner === match.squadra_trasferta)}
+        {teamRow(match.squadra_casa,      goalCasa,      winner === match.squadra_casa)}
+        {teamRow(match.squadra_trasferta, goalTrasferta, winner === match.squadra_trasferta)}
       </div>
 
       {/* Data/ora se non c'è ancora il risultato */}
