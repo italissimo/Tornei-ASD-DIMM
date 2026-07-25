@@ -1,56 +1,104 @@
 import React, { useEffect, useState } from 'react';
-import { Sun, Trophy, Loader, AlertCircle } from 'lucide-react';
+import { Sun, Trophy, Loader, AlertCircle, MapPin, Calendar } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Partita } from '../types/calendario';
 
 const FASI = [
-  { key: 'ottavi', label: 'Ottavi di Finale' },
-  { key: 'quarti', label: 'Quarti di Finale' },
+  { key: 'ottavi',    label: 'Ottavi di Finale' },
+  { key: 'quarti',   label: 'Quarti di Finale' },
   { key: 'semifinali', label: 'Semifinali' },
-  { key: 'finale', label: 'Finale' },
+  { key: 'finale',   label: 'Finale' },
 ] as const;
 
 type FaseKey = typeof FASI[number]['key'];
 
-const MatchCard: React.FC<{ match: Partita | null; label?: string }> = ({ match, label }) => {
-  if (!match) {
-    return (
-      <div className="bg-orange-50 rounded-xl p-4 border-2 border-dashed border-orange-200">
-        <div className="text-center text-orange-400 text-sm font-medium">{label || 'TBD'}</div>
-      </div>
-    );
+/** Estrae i gol da una stringa risultato in qualsiasi formato ragionevole.
+ *  Gestisce: "3-0", "3 - 0", "3:0", "3 : 0", "3(8)-3", "3-3(8)" */
+function parseRisultato(raw: string): { goalCasa: string; goalTrasferta: string } | null {
+  const s = raw.trim();
+  if (!s) return null;
+  // Tenta prima col trattino, poi con i due punti
+  for (const sep of ['-', ':']) {
+    const idx = s.indexOf(sep);
+    if (idx > 0 && idx < s.length - 1) {
+      return {
+        goalCasa:      s.slice(0, idx).trim(),
+        goalTrasferta: s.slice(idx + 1).trim(),
+      };
+    }
   }
+  return null;
+}
 
-  const hasResult = match.risultato && match.risultato.trim() !== '';
-  const [goalCasa, goalTrasferta] = hasResult ? match.risultato!.split('-') : ['', ''];
+/** Ricava il nome del vincitore dalla stringa risultato */
+function getWinner(match: Partita): string | null {
+  if (!match.risultato) return null;
+  const r = parseRisultato(match.risultato);
+  if (!r) return null;
+  const g1 = parseInt(r.goalCasa.replace(/\(.*/, ''));
+  const g2 = parseInt(r.goalTrasferta.replace(/\(.*/, ''));
+  if (isNaN(g1) || isNaN(g2)) return null;
+  if (g1 > g2) return match.squadra_casa;
+  if (g2 > g1) return match.squadra_trasferta;
+  // rigori
+  const p1 = r.goalCasa.match(/\((\d+)/);
+  const p2 = r.goalTrasferta.match(/\((\d+)/);
+  if (p1 && p2) {
+    if (parseInt(p1[1]) > parseInt(p2[1])) return match.squadra_casa;
+    if (parseInt(p2[1]) > parseInt(p1[1])) return match.squadra_trasferta;
+  }
+  return null;
+}
+
+const MatchCard: React.FC<{ match: Partita }> = ({ match }) => {
+  const parsed = match.risultato ? parseRisultato(match.risultato) : null;
+  const hasResult = parsed !== null;
+  const winner = hasResult ? getWinner(match) : null;
+
+  const teamRow = (name: string | null, goal: string | undefined, isWinner: boolean) => (
+    <div className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg transition-colors ${
+      isWinner ? 'bg-orange-500' : 'bg-transparent'
+    }`}>
+      <span className={`text-sm font-semibold truncate ${isWinner ? 'text-white' : 'text-slate-700'}`}>
+        {name || 'TBD'}
+      </span>
+      {hasResult && goal !== undefined && (
+        <span className={`text-base font-black flex-shrink-0 min-w-[1.5rem] text-center ${
+          isWinner ? 'text-white' : 'text-orange-600'
+        }`}>
+          {goal}
+        </span>
+      )}
+    </div>
+  );
 
   return (
-    <div className={`rounded-xl p-4 border-2 transition-all ${
-      hasResult ? 'bg-white border-orange-500 shadow-md' : 'bg-orange-50 border-orange-200'
+    <div className={`rounded-xl border-2 overflow-hidden transition-all ${
+      hasResult
+        ? 'bg-white border-orange-400 shadow-md'
+        : 'bg-orange-50 border-orange-200'
     }`}>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-semibold text-slate-800 truncate">
-            {match.squadra_casa || 'TBD'}
-          </span>
-          {hasResult && (
-            <span className="text-sm font-black text-orange-600 flex-shrink-0">{goalCasa}</span>
-          )}
-        </div>
-        <div className="border-t border-orange-100" />
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-semibold text-slate-800 truncate">
-            {match.squadra_trasferta || 'TBD'}
-          </span>
-          {hasResult && (
-            <span className="text-sm font-black text-orange-600 flex-shrink-0">{goalTrasferta}</span>
-          )}
-        </div>
+      <div className="divide-y divide-orange-100">
+        {teamRow(match.squadra_casa,      parsed?.goalCasa,      winner === match.squadra_casa)}
+        {teamRow(match.squadra_trasferta, parsed?.goalTrasferta, winner === match.squadra_trasferta)}
       </div>
-      {!hasResult && match.data && (
-        <div className="mt-2 text-center text-xs text-orange-400">
-          {new Date(match.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
-          {match.ora ? ` • ${match.ora.slice(0, 5)}` : ''}
+
+      {/* Data/ora se non c'è ancora il risultato */}
+      {!hasResult && (match.data || match.ora || match.campo) && (
+        <div className="px-3 py-2 bg-orange-50 border-t border-orange-100 flex items-center gap-3 text-xs text-orange-400">
+          {match.data && (
+            <span className="flex items-center gap-1">
+              <Calendar size={11} />
+              {new Date(match.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
+              {match.ora ? ` ${match.ora.slice(0, 5)}` : ''}
+            </span>
+          )}
+          {match.campo && (
+            <span className="flex items-center gap-1">
+              <MapPin size={11} />
+              {match.campo}
+            </span>
+          )}
         </div>
       )}
     </div>
@@ -65,16 +113,10 @@ const EstivoTabellonePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchTabellone();
-  }, [activeTab]);
+  useEffect(() => { fetchTabellone(); }, [activeTab]);
 
   const fetchTabellone = async () => {
-    if (!supabase) {
-      setError('Database non disponibile');
-      setLoading(false);
-      return;
-    }
+    if (!supabase) { setError('Database non disponibile'); setLoading(false); return; }
     setLoading(true);
     setError(null);
 
@@ -86,9 +128,11 @@ const EstivoTabellonePage: React.FC = () => {
         .select('*')
         .in('fase_coppa', ['ottavi', 'quarti', 'semifinali', 'finale'])
         .order('data', { ascending: true, nullsFirst: false })
-        .order('ora', { ascending: true, nullsFirst: false });
+        .order('ora',  { ascending: true, nullsFirst: false });
 
       if (fetchError) throw fetchError;
+
+      console.log('[EstivoTabellone] dati ricevuti:', data);
 
       const grouped: Record<FaseKey, Partita[]> = { ottavi: [], quarti: [], semifinali: [], finale: [] };
       (data || []).forEach((p: Partita) => {
@@ -106,6 +150,11 @@ const EstivoTabellonePage: React.FC = () => {
 
   const hasAnyData = Object.values(matchesByFase).some(arr => arr.length > 0);
 
+  // Vincitore finale
+  const finaleMatches = matchesByFase.finale;
+  const finaleConRisultato = finaleMatches.find(m => m.risultato);
+  const campione = finaleConRisultato ? getWinner(finaleConRisultato) : null;
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
@@ -116,15 +165,10 @@ const EstivoTabellonePage: React.FC = () => {
         </div>
         <div className="flex bg-white rounded-lg p-1 shadow-sm border border-orange-100">
           {(['calcio5', 'calcio7'] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+            <button key={tab} onClick={() => setActiveTab(tab)}
               className={`px-6 py-2 rounded-md font-medium transition-all ${
-                activeTab === tab
-                  ? 'bg-orange-500 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-orange-50'
-              }`}
-            >
+                activeTab === tab ? 'bg-orange-500 text-white shadow-md' : 'text-slate-600 hover:bg-orange-50'
+              }`}>
               {tab === 'calcio5' ? 'Calcio a 5' : 'Calcio a 7'}
             </button>
           ))}
@@ -160,7 +204,7 @@ const EstivoTabellonePage: React.FC = () => {
 
       {/* Tabellone */}
       {!loading && !error && hasAnyData && (
-        <div className="space-y-8">
+        <div className="space-y-10">
           {FASI.map(({ key, label }) => {
             const matches = matchesByFase[key];
             if (matches.length === 0) return null;
@@ -169,6 +213,9 @@ const EstivoTabellonePage: React.FC = () => {
                 <h3 className="text-lg font-bold text-orange-800 mb-4 flex items-center gap-2">
                   <span className="w-2 h-6 bg-orange-500 rounded-full inline-block" />
                   {label}
+                  <span className="ml-2 text-sm font-normal text-orange-400">
+                    ({matches.filter(m => m.risultato).length}/{matches.length} giocate)
+                  </span>
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {matches.map(match => (
@@ -178,6 +225,28 @@ const EstivoTabellonePage: React.FC = () => {
               </div>
             );
           })}
+
+          {/* Campione */}
+          <div className="text-center">
+            {campione ? (
+              <div className="inline-flex flex-col items-center gap-3">
+                <div className="inline-block bg-gradient-to-br from-orange-400 to-yellow-500 p-1 rounded-2xl shadow-xl">
+                  <div className="bg-white px-10 py-5 rounded-xl flex flex-col items-center gap-2">
+                    <Trophy className="text-orange-500" size={40} />
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      Campione Estivo {new Date().getFullYear()}
+                    </span>
+                    <span className="text-2xl font-black text-slate-900">{campione}</span>
+                  </div>
+                </div>
+              </div>
+            ) : finaleMatches.length > 0 ? (
+              <div className="inline-flex flex-col items-center gap-2 bg-orange-50 border-2 border-dashed border-orange-200 rounded-2xl px-8 py-5">
+                <Trophy className="text-orange-300" size={36} />
+                <span className="text-sm font-semibold text-orange-500">Finale da giocare</span>
+              </div>
+            ) : null}
+          </div>
         </div>
       )}
     </div>
