@@ -110,6 +110,28 @@ const CoppaBracket: React.FC<CoppaBracketProps> = ({ category }) => {
 
   const hasData = quarti.length > 0 || semifinali.length > 0 || finale || vincitore;
 
+  // Deriva il vincitore dal risultato della finale se non è stato inserito manualmente in vincitori_coppa
+  const deriveWinnerFromMatch = (match: Partita | null): string | null => {
+    if (!match?.risultato || !match.squadra_casa || !match.squadra_trasferta) return null;
+    const parts = match.risultato.split('-');
+    if (parts.length < 2) return null;
+    const g1 = parseInt(parts[0].replace(/\(.*/, '').trim());
+    const g2 = parseInt(parts[1].replace(/\(.*/, '').trim());
+    if (isNaN(g1) || isNaN(g2)) return null;
+    if (g1 > g2) return match.squadra_casa;
+    if (g2 > g1) return match.squadra_trasferta;
+    const m1 = parts[0].match(/\((\d+)/);
+    const m2 = parts[1].match(/\((\d+)/);
+    if (m1 && m2) {
+      const p1 = parseInt(m1[1]); const p2 = parseInt(m2[1]);
+      if (p1 > p2) return match.squadra_casa;
+      if (p2 > p1) return match.squadra_trasferta;
+    }
+    return null;
+  };
+  const winnerName: string | null = vincitore?.squadra ?? deriveWinnerFromMatch(finale);
+  const winnerAnno: number = vincitore?.anno ?? new Date().getFullYear();
+
   if (!hasData) {
     return (
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
@@ -228,11 +250,11 @@ const CoppaBracket: React.FC<CoppaBracketProps> = ({ category }) => {
 
           <div className="flex-1 pt-48 flex flex-col items-center">
             <h3 className="text-lg font-bold text-slate-800 text-center mb-4">Vincitore</h3>
-            {vincitore ? (
+            {winnerName ? (
               <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl p-6 text-center shadow-xl border-4 border-yellow-300">
                 <Trophy className="w-12 h-12 text-white mx-auto mb-3" />
-                <div className="text-xl font-bold text-white mb-1">{vincitore.squadra}</div>
-                <div className="text-sm text-yellow-100">Coppa {vincitore.anno}</div>
+                <div className="text-xl font-bold text-white mb-1">{winnerName}</div>
+                <div className="text-sm text-yellow-100">Coppa {winnerAnno}</div>
               </div>
             ) : (
               <div className="bg-slate-100 rounded-xl p-6 text-center border-2 border-dashed border-slate-300">
@@ -274,11 +296,11 @@ const CoppaBracket: React.FC<CoppaBracketProps> = ({ category }) => {
 
         <div>
           <h3 className="text-lg font-bold text-slate-800 mb-4 text-center">Vincitore</h3>
-          {vincitore ? (
+          {winnerName ? (
             <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl p-6 text-center shadow-xl border-4 border-yellow-300">
               <Trophy className="w-12 h-12 text-white mx-auto mb-3" />
-              <div className="text-xl font-bold text-white mb-1">{vincitore.squadra}</div>
-              <div className="text-sm text-yellow-100">Coppa {vincitore.anno}</div>
+              <div className="text-xl font-bold text-white mb-1">{winnerName}</div>
+              <div className="text-sm text-yellow-100">Coppa {winnerAnno}</div>
             </div>
           ) : (
             <div className="bg-slate-100 rounded-xl p-6 text-center border-2 border-dashed border-slate-300">

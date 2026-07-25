@@ -100,6 +100,28 @@ const PlayoffBracket: React.FC<PlayoffBracketProps> = ({ category }) => {
 
   const hasData = semifinali.length > 0 || finale || vincitore;
 
+  // Deriva il vincitore dal risultato della finale se non è stato inserito manualmente in vincitori_coppa
+  const deriveWinnerFromMatch = (match: Partita | null): string | null => {
+    if (!match?.risultato || !match.squadra_casa || !match.squadra_trasferta) return null;
+    const parts = match.risultato.split('-');
+    if (parts.length < 2) return null;
+    const g1 = parseInt(parts[0].replace(/\(.*/, '').trim());
+    const g2 = parseInt(parts[1].replace(/\(.*/, '').trim());
+    if (isNaN(g1) || isNaN(g2)) return null;
+    if (g1 > g2) return match.squadra_casa;
+    if (g2 > g1) return match.squadra_trasferta;
+    const m1 = parts[0].match(/\((\d+)/);
+    const m2 = parts[1].match(/\((\d+)/);
+    if (m1 && m2) {
+      const p1 = parseInt(m1[1]); const p2 = parseInt(m2[1]);
+      if (p1 > p2) return match.squadra_casa;
+      if (p2 > p1) return match.squadra_trasferta;
+    }
+    return null;
+  };
+  const winnerName: string | null = vincitore?.squadra ?? deriveWinnerFromMatch(finale);
+  const winnerAnno: number = vincitore?.anno ?? new Date().getFullYear();
+
   if (!hasData) {
     return (
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
@@ -203,16 +225,16 @@ const PlayoffBracket: React.FC<PlayoffBracketProps> = ({ category }) => {
             <div className="absolute -inset-4 border-2 border-yellow-400/30 rounded-xl -z-10 bg-yellow-50/10"></div>
           </div>
           
-          {vincitore && finale?.risultato && (
+          {winnerName && (
             <div className="mt-8 text-center animate-fade-in">
               <div className="inline-block bg-gradient-to-r from-yellow-400 to-yellow-600 p-1 rounded-2xl shadow-xl">
                 <div className="bg-white px-8 py-4 rounded-xl flex flex-col items-center">
                   <Trophy className="text-yellow-500 mb-2" size={48} />
                   <span className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-1">
-                    Campione Playoff {vincitore.anno}
+                    Campione Playoff {winnerAnno}
                   </span>
                   <span className="text-2xl font-black text-slate-900">
-                    {vincitore.squadra}
+                    {winnerName}
                   </span>
                 </div>
               </div>
